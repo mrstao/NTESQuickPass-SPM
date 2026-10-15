@@ -1,0 +1,32 @@
+name: Validate iOS package
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check binary provenance and slices
+        run: python3 Scripts/validate.py
+      - name: Parse manifest
+        run: swift package dump-package > /tmp/ntes-package.json
+      - name: Build simulator package
+        run: >-
+          xcodebuild -project Examples/SmokeApp/SmokeApp.xcodeproj -scheme SmokeApp -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath "$RUNNER_TEMP/ntes-derived"
+          CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=NO OTHER_LDFLAGS='$(inherited) -ObjC' build
+      - name: Build device package
+        run: >-
+          xcodebuild -project Examples/SmokeApp/SmokeApp.xcodeproj -scheme SmokeApp -destination 'generic/platform=iOS'
+          -derivedDataPath "$RUNNER_TEMP/ntes-device"
+          CODE_SIGNING_ALLOWED=NO OTHER_LDFLAGS='$(inherited) -ObjC' build
+      - name: Test package resources and SDK linkage
+        shell: bash
+        run: |
+          simulator_id="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(v["udid"] for k,vs in d["devices"].items() if k.startswith("com.apple.CoreSimulator.SimRuntime.iOS-") for v in vs if v.get("isAvailable") and v["name"].startswith("iPhone")))')"
+          xcodebuild -scheme NTESQuickPass-SPM -destination "platform=iOS Simulator,id=$simulator_id" \
+            -derivedDataPath "$RUNNER_TEMP/ntes-tests" CODE_SIGNING_ALLOWED=NO test
