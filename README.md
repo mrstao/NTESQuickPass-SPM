@@ -16,9 +16,11 @@ Package 的 iOS 12.0 声明与官方 3.7.10 podspec 一致；实际可构建的�
 
 ## 1. 添加 Package
 
-在 Xcode → File → Add Package Dependencies 输入 `https://github.com/mrstao/NTESQuickPass-SPM.git`，选择产品 **NTESQuickPass**，添加到 App target。私有仓库需要先在 Xcode 中登录有访问权限的 GitHub 账号。
+在 Xcode → File → Add Package Dependencies 输入 `https://github.com/mrstao/NTESQuickPass-SPM.git`，选择产品 **NTESQuickPass**，添加到 App target。仓库为公开仓库，无需私有仓库访问权限。
 
-选择 Branch `main`。需要固定版本时，可先在仓库创建经过验证的版本 tag，再在 Xcode 中选择对应的 Exact Version。
+推荐选择 **Up to Next Major Version**，起始版本填写 **`3.7.10`**，对应范围为 `3.7.10..<4.0.0`。需要锁定版本时选择 **Exact Version `3.7.10`**；跟随开发分支时也可以选择 **Branch `main`**。
+
+若此前使用 `1.0.0 – Next Major`，请将起始版本改为 `3.7.10`，再执行 File → Packages → Resolve Package Versions。`1.0.0..<2.0.0` 无法匹配 `3.7.10`。SPM 版本由仓库的 Git tag 提供，`main` 分支不会自动成为版本号。
 
 已有项目应先移除同名 SDK 的 CocoaPods / 手动集成，避免重复符号。若其他易盾 SDK 也依赖 NTESBaseComponent，需统一由一份依赖提供。
 
