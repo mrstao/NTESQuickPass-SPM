@@ -4,7 +4,7 @@
 
 | 组件 | 固定版本 |
 | --- | --- |
-| NTESQuickPass | 3.7.10 |
+| NTESQuickPass | 3.8.0 |
 | NTESBaseComponent | 2.0 |
 | 平台 | iOS 12.0+ |
 | 工具链 | Xcode 15+ / Swift tools 5.9+ |
@@ -18,9 +18,9 @@ Package 的 iOS 12.0 声明与官方 3.7.10 podspec 一致；实际可构建的�
 
 在 Xcode → File → Add Package Dependencies 输入 `https://github.com/mrstao/NTESQuickPass-SPM.git`，选择产品 **NTESQuickPass**，添加到 App target。仓库为公开仓库，无需私有仓库访问权限。
 
-推荐选择 **Up to Next Major Version**，起始版本填写 **`3.7.10`**，对应范围为 `3.7.10..<4.0.0`。需要锁定版本时选择 **Exact Version `3.7.10`**；跟随开发分支时也可以选择 **Branch `main`**。
+推荐选择 **Up to Next Major Version**，起始版本填写 **`3.8.0`**，对应范围为 `3.8.0..<4.0.0`。需要锁定版本时选择 **Exact Version `3.8.0`**；跟随开发分支时也可以选择 **Branch `main`**。
 
-若此前使用 `1.0.0 – Next Major`，请将起始版本改为 `3.7.10`，再执行 File → Packages → Resolve Package Versions。`1.0.0..<2.0.0` 无法匹配 `3.7.10`。SPM 版本由仓库的 Git tag 提供，`main` 分支不会自动成为版本号。
+若此前使用 `1.0.0 – Next Major`，请将起始版本改为 `3.8.0`，再执行 File → Packages → Resolve Package Versions。`1.0.0..<2.0.0` 无法匹配 `3.7.10`。SPM 版本由仓库的 Git tag 提供，`main` 分支不会自动成为版本号。
 
 已有项目应先移除同名 SDK 的 CocoaPods / 手动集成，避免重复符号。若其他易盾 SDK 也依赖 NTESBaseComponent，需统一由一份依赖提供。
 
@@ -107,7 +107,7 @@ Objective-C：
 
 官方说明 token 和 accessToken 有效期为两分钟且不能重复使用。双卡设备使用当前蜂窝数据卡；只有 Wi-Fi 或模拟器环境不能作为认证成功验收。
 
-官方文档：[3.7.10 一键登录接入指南](https://github.com/yidun/NTESQuickPass/blob/3.7.10/doc/一键登录iOS%20SDK接入指南.md) · [3.7.10 本机验证接入指南](https://github.com/yidun/NTESQuickPass/blob/3.7.10/doc/本机验证%20iOS%20SDK接入指南.md)
+官方文档：[3.8.0 一键登录接入指南](https://github.com/yidun/NTESQuickPass/blob/3.8.0/doc/一键登录iOS%20SDK接入指南.md) · [3.8.0 本机验证接入指南](https://github.com/yidun/NTESQuickPass/blob/3.8.0/doc/本机验证%20iOS%20SDK接入指南.md)
 
 ## 官方仓库对照说明
 
