@@ -1,0 +1,106 @@
+name: Sync official NTESQuickPass
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect and sync upstream
+        id: sync
+        run: python3 Scripts/sync_upstream.py
+
+      - name: Validate binary provenance
+        if: steps.sync.outputs.updated == 'true'
+        run: python3 Scripts/validate.py
+
+      - name: Parse Swift package manifest
+        if: steps.sync.outputs.updated == 'true'
+        run: swift package dump-package > /tmp/ntes-package.json
+
+      - name: Build simulator package
+        if: steps.sync.outputs.updated == 'true'
+        run: |
+          xcodebuild \
+            -project Examples/SmokeApp/SmokeApp.xcodeproj \
+            -scheme SmokeApp \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/ntes-derived" \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            OTHER_LDFLAGS='$(inherited) -ObjC' \
+            build
+
+      - name: Build device package
+        if: steps.sync.outputs.updated == 'true'
+        run: |
+          xcodebuild \
+            -project Examples/SmokeApp/SmokeApp.xcodeproj \
+            -scheme SmokeApp \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/ntes-device" \
+            CODE_SIGNING_ALLOWED=NO \
+            OTHER_LDFLAGS='$(inherited) -ObjC' \
+            build
+
+      - name: Test package
+        if: steps.sync.outputs.updated == 'true'
+        shell: bash
+        run: |
+          simulator_id="$(
+            xcrun simctl list devices available -j |
+            python3 -c '
+          import json,sys
+          data=json.load(sys.stdin)
+          print(next(
+            device["udid"]
+            for runtime,devices in data["devices"].items()
+            if runtime.startswith("com.apple.CoreSimulator.SimRuntime.iOS-")
+            for device in devices
+            if device.get("isAvailable") and device["name"].startswith("iPhone")
+          ))
+          '
+          )"
+
+          xcodebuild \
+            -scheme NTESQuickPass-SPM \
+            -destination "platform=iOS Simulator,id=$simulator_id" \
+            -derivedDataPath "$RUNNER_TEMP/ntes-tests" \
+            CODE_SIGNING_ALLOWED=NO \
+            test
+
+      - name: Create update pull request
+        if: steps.sync.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/upstream-${{ steps.sync.outputs.version }}
+          delete-branch: true
+          commit-message: "chore: sync NTESQuickPass ${{ steps.sync.outputs.version }}"
+          title: "chore: sync NTESQuickPass ${{ steps.sync.outputs.version }}"
+          body: |
+            Automated update from the official
+            yidun/NTESQuickPass repository.
+
+            - Sync official XCFrameworks and resources
+            - Update UPSTREAM.json provenance and SHA-256 hashes
+            - Update consumer-facing version references
+            - Validate and build before opening this PR
+
+            Please review SDK API changes, privacy manifests,
+            and carrier authentication behavior before merging.
+          add-paths: |
+            Frameworks/**
+            Sources/NTESQuickPassSPM/Resources/NTESResource.bundle/**
+            UPSTREAM.json
+            README.md
